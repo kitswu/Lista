@@ -1,22 +1,29 @@
 package davi.nunes.ribeiro.galeria.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.List;
 
 import davi.nunes.ribeiro.galeria.R;
 import davi.nunes.ribeiro.galeria.adapter.MyAdapter;
+import davi.nunes.ribeiro.galeria.model.MainActivityViewModel;
 import davi.nunes.ribeiro.galeria.model.MyItem;
+import davi.nunes.ribeiro.galeria.model.Util;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         RecyclerView rvItens = findViewById(R.id.rvItems); // obtem o recycler view pelo id
+        MainActivityViewModel vm = new ViewModelProvider(this).get(MainActivityViewModel.class);
+        List<MyItem> itens = vm.getItens();
 
         myAdapter = new MyAdapter(this, itens); // cria um MyAdapter
         rvItens.setAdapter(myAdapter); // seta o MyAdapter como o adapter do recycler view
@@ -58,9 +67,20 @@ public class MainActivity extends AppCompatActivity {
                 MyItem myItem = new MyItem(); // cria novo item
                 myItem.title = data.getStringExtra("title"); // guarda o titulo
                 myItem.desc = data.getStringExtra("desc"); // guarda a descrição
-                myItem.photo = data.getData(); // guarda a foto
+                Uri selectedPhotoURI = data.getData(); // pega o URI da foto
+
+                try {
+                    Bitmap photo = Util.getBitmap(MainActivity.this, selectedPhotoURI, 100, 100); // guarda a imagem em um bitmap
+                    myItem.photo = photo; // coloca o bitmap da foto no item
+                }
+                catch (FileNotFoundException e){ // acontece caso a imagem não seja encontrada
+                    e.printStackTrace();
+                }
+                MainActivityViewModel vm = new ViewModelProvider(this).get(MainActivityViewModel.class);
+                List<MyItem> itens = vm.getItens();
                 itens.add(myItem); // adiciona à lista de itens
                 myAdapter.notifyItemInserted(itens.size()-1); // notifica o adapter de que um novo item foi inserido
+
             }
         }
     }
